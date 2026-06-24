@@ -1,0 +1,208 @@
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
+import toast from 'react-hot-toast';
+import { signIn } from '@/lib/auth-client';
+
+export default function SigninForm({ redirectTo = '/' }) {
+  const router = useRouter();
+
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.email || !formData.password) {
+      toast.error('Please fill in all fields.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await signIn.email({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (error) {
+        toast.error(error.message || 'Invalid email or password.');
+        return;
+      }
+      toast.success('Welcome back! ✨');
+      setFormData({ email: '', password: '' });
+      router.push(redirectTo);
+    } catch (err) {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignin = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signIn.social({ provider: 'google', callbackURL: redirectTo });
+    } catch (err) {
+      toast.error('Google sign-in failed. Please try again.');
+      setIsGoogleLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 flex items-center justify-center px-4 py-12 min-h-screen bg-gray-50 dark:bg-[#0f1117] relative overflow-hidden">
+
+      {/* Ambient glow blobs */}
+      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-orange-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative z-10 w-full max-w-4xl"
+      >
+        <div className="bg-white/80 dark:bg-[#1a1d24]/80 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-2xl hover:shadow-amber-500/10 dark:hover:shadow-amber-900/30 transition-all duration-300 flex flex-col md:flex-row">
+
+          {/* Image Panel */}
+          <div className="relative w-full md:w-1/2 h-48 md:h-auto overflow-hidden md:order-2">
+            <Image
+              src="https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800"
+              alt="Life Lessons"
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/95 via-zinc-800/50 to-transparent" />
+            <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
+              <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent font-bold text-2xl md:text-3xl drop-shadow-sm mb-3">
+                Life Lessons
+              </span>
+              <p className="text-white/90 text-sm md:text-base leading-relaxed max-w-[240px]">
+                Real wisdom from real experiences. Discover and share lessons that matter.
+              </p>
+            </div>
+          </div>
+
+          {/* Form Panel */}
+          <div className="w-full md:w-1/2 p-8 md:order-1">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                Welcome{' '}
+                <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+                  Back
+                </span>
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Sign in to continue reading and sharing life lessons.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:border-amber-500 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all"
+                />
+              </div>
+
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-10 pr-11 py-2.5 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:border-amber-500 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.span
+                      key={showPassword ? 'off' : 'on'}
+                      initial={{ opacity: 0, rotate: -45, scale: 0.6 }}
+                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                      exit={{ opacity: 0, rotate: 45, scale: 0.6 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </motion.span>
+                  </AnimatePresence>
+                </button>
+              </div>
+
+              <motion.button
+                type="submit"
+                disabled={isLoading}
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-3 mt-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-sm shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:from-amber-400 hover:to-orange-400 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </motion.button>
+            </form>
+
+            <div className="flex items-center gap-3 my-4">
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+              <span className="text-gray-400 dark:text-gray-500 text-xs">Or continue with</span>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            </div>
+
+            <motion.button
+              onClick={handleGoogleSignin}
+              disabled={isGoogleLoading}
+              whileTap={{ scale: 0.95 }}
+              className="w-full py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-900 dark:text-white text-sm font-medium flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isGoogleLoading ? (
+                <div className="w-4 h-4 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin" />
+              ) : (
+                <FcGoogle className="w-5 h-5" />
+              )}
+              Continue with Google
+            </motion.button>
+
+            <p className="text-center text-gray-500 dark:text-gray-400 text-xs mt-4">
+              Don&apos;t have an account?{' '}
+              <Link
+                href={`/auth/signup?redirect=${encodeURIComponent(redirectTo)}`}
+                className="text-amber-500 hover:text-amber-400 dark:text-amber-400 dark:hover:text-amber-300 font-medium transition-colors"
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
+
+        </div>
+      </motion.div>
+    </div>
+  );
+}
