@@ -62,7 +62,6 @@ const Navbar = () => {
 
   const dashboardLinks = {
     user: '/dashboard/user',
-    vendor: '/dashboard/vendor',
     admin: '/dashboard/admin',
   };
 
@@ -77,19 +76,19 @@ const navLinks = [
 
   {
     name: "Public Lessons",
-    href: "/public-lessons",
+    href: "/lessons",
   },
 
   ...(user
     ? [
         {
           name: "Add Lesson",
-          href: "/dashboard/add-lesson",
+          href: "/dashboard/user/add-lesson",
         },
 
         {
           name: "My Lessons",
-          href: "/dashboard/my-lessons",
+          href: "/dashboard/user/my-lesson",
         },
 
         ...(!user?.isPremium

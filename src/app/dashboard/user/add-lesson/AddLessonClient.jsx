@@ -48,6 +48,7 @@ export default function AddLessonClient({user}) {
 
   // Check user premium tier status from passed prop fallback safely to false
   const isUserPremium = user?.isPremium === true;
+  // console.log(user);
 
   const [form, setForm] = useState({
     title: "",
@@ -133,28 +134,43 @@ export default function AddLessonClient({user}) {
 
   const handleSubmit = async () => {
     if (!form.title.trim()) return toast.error("Lesson title is required");
-    if (!form.description.trim())
+
+    if (!form.description.trim()) {
       return toast.error("Description/Story insight is required");
-    if (!form.category) return toast.error("Please select a lesson category");
-    if (!form.emotionalTone)
+    }
+
+    if (!form.category) {
+      return toast.error("Please select a lesson category");
+    }
+
+    if (!form.emotionalTone) {
       return toast.error("Please choose an emotional tone");
+    }
 
     setIsLoading(true);
+
     try {
       const session = await authClient.getSession();
       const token = session?.data?.session?.token;
 
-      // Final sanitization rule check before parsing dispatch to server side api
       const finalAccessLevel = isUserPremium ? form.accessLevel : "free";
 
       const lessonData = {
-        ...form,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        category: form.category,
+        emotionalTone: form.emotionalTone,
+        image: form.image || "",
+        visibility: form.visibility,
         accessLevel: finalAccessLevel,
-        creatorName: user?.name,
-        creatorEmail: user?.email,
-        creatorPhoto: user?.image,
-        createdAt: new Date().toISOString(),
+        likes: [],
+        likesCount: 0,
+        isFeatured: false,
+        isReviewed: false,
+        creatorId: user?.id || user?._id,
       };
+
+      console.log("Sending lesson:", lessonData);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/lessons`,
@@ -175,7 +191,8 @@ export default function AddLessonClient({user}) {
         const err = await res.json();
         toast.error(err.message || "Failed to save lesson");
       }
-    } catch {
+    } catch (error) {
+      console.error(error);
       toast.error("Something went wrong");
     } finally {
       setIsLoading(false);
